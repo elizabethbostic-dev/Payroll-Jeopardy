@@ -89,9 +89,24 @@
         <!-- Header and Score Board -->
         <div class="flex flex-col sm:flex-row justify-between items-center p-4 mb-6 bg-gray-800 rounded-lg shadow-xl">
             <h1 class="text-3xl sm:text-4xl font-black text-white mb-2 sm:mb-0">PAYROLL PATHWAY JEOPARDY</h1>
-            <div id="score-display" class="text-3xl font-bold text-green-400">
-                Score: $0
+            <!-- TWO TEAM SCORE DISPLAY -->
+            <div class="flex items-center space-x-4">
+                <!-- Team 1 Score (Active by default) -->
+                <div id="team1-score-container" 
+                     class="p-3 rounded-lg border-2 border-transparent transition duration-300 cursor-pointer border-yellow-400 bg-gray-700" 
+                     onclick="setActiveTeam('team1')">
+                    <div class="text-lg font-bold text-white">The Compilers</div>
+                    <div id="score-team1" class="text-3xl font-bold text-green-400">$0</div>
+                </div>
+                <!-- Team 2 Score -->
+                <div id="team2-score-container" 
+                     class="p-3 rounded-lg border-2 border-transparent transition duration-300 cursor-pointer" 
+                     onclick="setActiveTeam('team2')">
+                    <div class="text-lg font-bold text-white">The Auditors</div>
+                    <div id="score-team2" class="text-3xl font-bold text-gray-400">$0</div>
+                </div>
             </div>
+            <!-- END TWO TEAM SCORE DISPLAY -->
         </div>
 
         <!-- Game Board -->
@@ -211,7 +226,11 @@
         ];
 
         // --- Game State ---
-        let score = 0;
+        let teamScores = {
+            'team1': 0,
+            'team2': 0
+        };
+        let activeTeam = 'team1'; // Team 1 starts first
         let currentCard = null;
 
         // --- Gemini API Setup ---
@@ -298,6 +317,15 @@
         }
 
         // --- Game Logic ---
+
+        /**
+         * Sets the active team for scoring and updates the UI.
+         * @param {string} team 'team1' or 'team2'
+         */
+        function setActiveTeam(team) {
+            activeTeam = team;
+            updateScoreDisplay();
+        }
         
         // Function to initialize the game board
         function initializeBoard() {
@@ -331,13 +359,36 @@
 
         // Function to update the score display
         function updateScoreDisplay() {
-            document.getElementById('score-display').textContent = `Score: $${score}`;
-            if (score < 0) {
-                document.getElementById('score-display').classList.remove('text-green-400');
-                document.getElementById('score-display').classList.add('text-red-400');
-            } else {
-                document.getElementById('score-display').classList.remove('text-red-400');
-                document.getElementById('score-display').classList.add('text-green-400');
+            const team1Container = document.getElementById('team1-score-container');
+            const team2Container = document.getElementById('team2-score-container');
+            const score1El = document.getElementById('score-team1');
+            const score2El = document.getElementById('score-team2');
+
+            // 1. Update the actual score text
+            score1El.textContent = `$${teamScores.team1}`;
+            score2El.textContent = `$${teamScores.team2}`;
+
+            // 2. Reset styling for both teams
+            team1Container.classList.remove('border-yellow-400', 'bg-gray-700');
+            team2Container.classList.remove('border-yellow-400', 'bg-gray-700');
+            score1El.classList.remove('text-red-400', 'text-green-400', 'text-gray-400');
+            score2El.classList.remove('text-red-400', 'text-green-400', 'text-gray-400');
+            
+            // 3. Set score colors (Green/Red)
+            score1El.classList.add(teamScores.team1 < 0 ? 'text-red-400' : 'text-green-400');
+            score2El.classList.add(teamScores.team2 < 0 ? 'text-red-400' : 'text-green-400');
+
+            // 4. Highlight the active team
+            if (activeTeam === 'team1') {
+                team1Container.classList.add('border-yellow-400', 'bg-gray-700');
+                // Dim the inactive team's score color
+                score2El.classList.remove('text-red-400', 'text-green-400');
+                score2El.classList.add('text-gray-400');
+            } else { // activeTeam === 'team2'
+                team2Container.classList.add('border-yellow-400', 'bg-gray-700');
+                 // Dim the inactive team's score color
+                score1El.classList.remove('text-red-400', 'text-green-400');
+                score1El.classList.add('text-gray-400');
             }
         }
 
@@ -382,9 +433,9 @@
             const points = currentCard.points;
             
             if (status === 'correct') {
-                score += points;
+                teamScores[activeTeam] += points; // Update the active team's score
             } else if (status === 'incorrect') {
-                score -= points;
+                teamScores[activeTeam] -= points; // Update the active team's score
             }
 
             // Mark the card as answered
@@ -410,4 +461,3 @@
     </script>
 </body>
 </html>
-
