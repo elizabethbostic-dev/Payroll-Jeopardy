@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Pathway Jeopardy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark Blue/Black background */
+        }
+        .category-header {
+            background-color: #0b152d; /* Darker blue */
+            color: #fcd34d; /* Yellow */
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            border-bottom: 4px solid #fcd34d;
+            border-radius: 4px 4px 0 0;
+            text-align: center;
+            padding: 0.5rem;
+        }
+        .card {
+            background-color: #0d3b66; /* Deep Jeopardy Blue */
+            color: #fcd34d; /* Yellow */
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            border: 2px solid #1a202c;
+            height: 100px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .card:hover:not(.answered) {
+            transform: scale(1.03);
+            background-color: #1c529a;
+        }
+        .answered {
+            background-color: #3f4e64; /* Grayed out */
+            color: #8c98a9;
+            cursor: default;
+            pointer-events: none;
+            box-shadow: none;
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: #0d3b66;
+            border: 8px solid #fcd34d;
+            border-radius: 12px;
+            min-height: 50vh;
+        }
+        .reveal-button {
+            background-color: #d97706;
+            color: white;
+            transition: background-color 0.1s;
+        }
+        .reveal-button:hover {
+            background-color: #fb923c;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .category-header {
+                font-size: 0.8rem;
+                height: 80px;
+            }
+            .card {
+                font-size: 1.5rem;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-2 sm:p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header and Score Board -->
+        <div class="flex flex-col sm:flex-row justify-between items-center p-4 mb-6 bg-gray-800 rounded-lg shadow-xl">
+            <h1 class="text-3xl sm:text-4xl font-black text-white mb-2 sm:mb-0">PAYROLL PATHWAY JEOPARDY</h1>
+            <div id="score-display" class="text-3xl font-bold text-green-400">
+                Score: $0
+            </div>
+        </div>
+
+        <!-- Game Board -->
+        <div id="game-board" class="grid grid-cols-5 gap-2 sm:gap-4">
+            <!-- Grid items will be populated by JavaScript -->
+        </div>
+
+    </div>
+
+    <!-- Question/Answer Modal -->
+    <div id="qa-modal" class="fixed inset-0 hidden items-center justify-center p-4 modal-overlay">
+        <div class="modal-content w-full max-w-4xl p-6 shadow-2xl">
+            
+            <p id="qa-category" class="text-center text-xl sm:text-2xl font-bold text-white mb-4"></p>
+            <p id="qa-points" class="text-center text-3xl sm:text-4xl font-extrabold text-green-400 mb-6"></p>
+
+            <div id="qa-display" class="min-h-[100px] flex items-center justify-center p-4 text-center text-3xl sm:text-4xl font-black text-white border-4 border-white rounded-lg">
+                <!-- Question text goes here -->
+            </div>
+
+            <div id="answer-reveal" class="hidden mt-6 text-center">
+                <p class="text-lg font-bold text-yellow-500 mb-2">Answer:</p>
+                <div id="qa-answer" class="text-2xl sm:text-3xl font-semibold text-white p-4 bg-gray-700 rounded-lg">
+                    <!-- Answer text goes here -->
+                </div>
+            </div>
+
+            <!-- Deep Dive Section (Gemini Integration) -->
+            <div id="deep-dive-section" class="hidden mt-6 text-center">
+                <button onclick="generateDeepDive()" id="deep-dive-btn" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-xl rounded-full font-bold transition duration-150">
+                    ✨ Compliance Deep Dive ✨
+                </button>
+                <div id="deep-dive-text" class="mt-4 p-4 text-left text-lg text-white bg-gray-700 rounded-lg hidden">
+                    <!-- Deep dive text goes here -->
+                </div>
+            </div>
+            
+            <div id="action-buttons" class="mt-8 flex justify-center space-x-4">
+                <button onclick="showAnswer()" id="reveal-btn" class="reveal-button px-8 py-3 text-2xl rounded-full font-bold">
+                    Reveal Answer
+                </button>
+                <div id="scoring-btns" class="hidden space-x-4">
+                    <button onclick="updateScore('correct')" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 text-xl rounded-full font-bold transition duration-150">
+                        Correct (+Points)
+                    </button>
+                    <button onclick="updateScore('incorrect')" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 text-xl rounded-full font-bold transition duration-150">
+                        Incorrect (-Points)
+                    </button>
+                    <button onclick="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 text-xl rounded-full font-bold transition duration-150">
+                        Close
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Use a consistent value for points to make score tracking easier
+        const POINT_VALUES = [100, 200, 300, 400, 500]; 
+        
+        // --- Game Data ---
+        // Using the first 5 Q&A pairs from each category to create a standard 5x5 board.
+        const GAME_DATA = [
+            {
+                name: "Time Entry & Verification",
+                questions: [
+                    { q: "Which action must be completed before supervisors can approve timecards?", a: "Employee must verify their own hours.", points: 100 },
+                    { q: "What tab must be clicked first to begin the weekly approval process?", a: "The 'Weekly Approval' tab.", points: 200 },
+                    { q: "What day of the week should principals approve and verify timecards?", a: "Wednesday (end of day).", points: 300 },
+                    { q: "What does the 'Total for the Week' on a timecard need to match before it’s accurate?", a: "The 'Scheduled' hours.", points: 400 },
+                    { q: "If a timecard shows a “P” under Final Status, what does that mean?", a: "The card is pending approval — the approver must still review and approve.", points: 500 },
+                ]
+            },
+            {
+                name: "Supervisor Responsibilities",
+                questions: [
+                    { q: "What is the final approval day for weekly timecards?", a: "Tuesday close of business (COB).", points: 100 },
+                    { q: "What must supervisors do before approving a timecard?", a: "Review and verify all entries for accuracy.", points: 200 },
+                    { q: "What happens if a supervisor approves an incorrect timecard?", a: "It triggers a Compliance Hold and delays payroll.", points: 300 },
+                    { q: "What should supervisors check for before finalizing time?", a: "Verify no 'P' (pending) status remains.", points: 400 },
+                    { q: "What is the consequence of missing the Tuesday COB deadline?", a: "Payroll processing delay or manual adjustment request.", points: 500 },
+                ]
+            },
+            {
+                name: "Payroll Processing & Deadlines",
+                questions: [
+                    { q: "When does Payroll begin processing all approved timecards?", a: "Wednesday morning.", points: 100 },
+                    { q: "What happens if payroll data is submitted late?", a: "It causes a one-cycle delay and potential audit flag.", points: 200 },
+                    { q: "What form must be submitted for off-cycle payroll corrections?", a: "The Payroll Adjustment Request Form.", points: 300 },
+                    { q: "What is the cutoff time for payroll edits?", a: "Tuesday at 4:30 PM.", points: 400 },
+                    { q: "When should staff report direct deposit or address changes?", a: "Before the current pay cycle ends.", points: 500 },
+                ]
+            },
+            {
+                name: "Compliance & Accountability",
+                questions: [
+                    { q: "What federal law governs overtime and timekeeping?", a: "The Fair Labor Standards Act (FLSA).", points: 100 },
+                    { q: "What documentation protects the district during audits?", a: "Timecard records and approval logs.", points: 200 },
+                    { q: "What must happen before an overtime request is valid?", a: "It must receive pre-approval from a supervisor.", points: 300 },
+                    { q: "What happens if a supervisor repeatedly approves incorrect hours?", a: "It may trigger a Payroll Compliance Review.", points: 400 },
+                    { q: "What is a 'Compliance Hold'?", a: "A pause in payroll processing due to missing or inaccurate documentation.", points: 500 },
+                ]
+            },
+            {
+                name: "The Road to PAYDAY (Bonus/Penalty)",
+                // Adapting the fun cards to Q&A format for game consistency
+                questions: [
+                    { q: "You missed the Tuesday COB deadline — SORRY!", a: "Action: Go back 2 spaces. (Deduct 100 points)", points: 100 },
+                    { q: "You verified early — bonus!", a: "Action: Move forward 1 space. (Add 200 points)", points: 200 },
+                    { q: "Supervisor forgot to finalize — Compliance Hold!", a: "Action: Lose 1 turn. (Deduct 300 points)", points: 300 },
+                    { q: "Payroll system down — wait for admin to clear exception.", a: "Action: Skip turn. (Deduct 400 points)", points: 400 },
+                    { q: "Supervisor submitted late corrections — move back 3 spaces.", a: "Action: Deduct 500 points.", points: 500 },
+                ]
+            }
+        ];
+
+        // --- Game State ---
+        let score = 0;
+        let currentCard = null;
+
+        // --- Gemini API Setup ---
+        const GEMINI_API_KEY = ""; // Intentionally empty for Canvas environment
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+        
+        /**
+         * Utility function for fetching data from the Gemini API with backoff.
+         */
+        async function fetchWithExponentialBackoff(payload) {
+            const MAX_RETRIES = 3;
+            let delay = 1000;
+            
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const response = await fetch(GEMINI_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        return response.json();
+                    } else if (response.status === 429 && i < MAX_RETRIES - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    throw new Error(`API call failed with status: ${response.status}`);
+                } catch (error) {
+                    if (i < MAX_RETRIES - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    throw error;
+                }
+            }
+        }
+        
+        /**
+         * LLM-powered function to generate a detailed compliance explanation.
+         */
+        async function generateDeepDive() {
+            const deepDiveContainer = document.getElementById('deep-dive-text');
+            const deepDiveButton = document.getElementById('deep-dive-btn');
+
+            deepDiveContainer.classList.remove('hidden');
+            deepDiveContainer.innerHTML = '<div class="text-white flex items-center justify-center space-x-2"><svg class="animate-spin h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Generating Deep Dive...</span></div>';
+            deepDiveButton.disabled = true;
+
+            const category = document.getElementById('qa-category').textContent;
+            const question = currentCard.q;
+            const answer = currentCard.a;
+
+            const systemPrompt = "You are an expert payroll and timekeeping compliance officer for DeSoto ISD. Your goal is to provide concise, professional, and practical explanations based on the provided Jeopardy question and answer. Structure your response as a single, detailed paragraph that explains the importance of the rule and the practical implication for staff or supervisors. Use markdown for formatting.";
+            
+            const userQuery = `Category: ${category}. Question: ${question}. Correct Answer: ${answer}. Provide a 'Compliance Deep Dive' explanation.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const result = await fetchWithExponentialBackoff(payload);
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate deep dive content.";
+                
+                // Convert simple markdown (like bold/italics) to HTML
+                let formattedText = generatedText
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                deepDiveContainer.innerHTML = formattedText;
+                deepDiveContainer.classList.remove('text-red-400');
+
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                deepDiveContainer.innerHTML = "Error: Could not connect to the deep dive generator. Check your network connection.";
+                deepDiveContainer.classList.add('text-red-400');
+            } finally {
+                deepDiveButton.disabled = false;
+            }
+        }
+
+        // --- Game Logic ---
+        
+        // Function to initialize the game board
+        function initializeBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = ''; // Clear board
+
+            // 1. Add Category Headers
+            GAME_DATA.forEach(category => {
+                const header = document.createElement('div');
+                header.className = 'category-header rounded';
+                header.textContent = category.name;
+                board.appendChild(header);
+            });
+
+            // 2. Add Question Cards
+            GAME_DATA.forEach((category, catIndex) => {
+                category.questions.forEach((question, qIndex) => {
+                    const card = document.createElement('div');
+                    card.id = `card-${catIndex}-${qIndex}`;
+                    card.className = 'card rounded-lg';
+                    card.textContent = `$${question.points}`;
+                    card.dataset.catIndex = catIndex;
+                    card.dataset.qIndex = qIndex;
+                    card.onclick = () => openModal(catIndex, qIndex);
+                    board.appendChild(card);
+                });
+            });
+
+            updateScoreDisplay();
+        }
+
+        // Function to update the score display
+        function updateScoreDisplay() {
+            document.getElementById('score-display').textContent = `Score: $${score}`;
+            if (score < 0) {
+                document.getElementById('score-display').classList.remove('text-green-400');
+                document.getElementById('score-display').classList.add('text-red-400');
+            } else {
+                document.getElementById('score-display').classList.remove('text-red-400');
+                document.getElementById('score-display').classList.add('text-green-400');
+            }
+        }
+
+        // Function to open the question modal
+        function openModal(catIndex, qIndex) {
+            currentCard = GAME_DATA[catIndex].questions[qIndex];
+            
+            const cardElement = document.getElementById(`card-${catIndex}-${qIndex}`);
+            if (cardElement.classList.contains('answered')) return;
+
+            document.getElementById('qa-category').textContent = GAME_DATA[catIndex].name.toUpperCase();
+            document.getElementById('qa-points').textContent = `$${currentCard.points}`;
+            document.getElementById('qa-display').textContent = currentCard.q;
+            document.getElementById('qa-answer').textContent = currentCard.a;
+            
+            // Reset modal state
+            document.getElementById('answer-reveal').classList.add('hidden');
+            document.getElementById('scoring-btns').classList.add('hidden');
+            document.getElementById('reveal-btn').classList.remove('hidden');
+            
+            // Reset Deep Dive
+            document.getElementById('deep-dive-section').classList.add('hidden');
+            document.getElementById('deep-dive-text').classList.add('hidden');
+            document.getElementById('deep-dive-text').innerHTML = '';
+
+
+            // Show modal
+            document.getElementById('qa-modal').classList.remove('hidden');
+            document.getElementById('qa-modal').classList.add('flex');
+        }
+
+        // Function to reveal the answer
+        function showAnswer() {
+            document.getElementById('answer-reveal').classList.remove('hidden');
+            document.getElementById('deep-dive-section').classList.remove('hidden'); // Show deep dive button
+            document.getElementById('reveal-btn').classList.add('hidden');
+            document.getElementById('scoring-btns').classList.remove('hidden');
+        }
+
+        // Function to update the score and close the modal
+        function updateScore(status) {
+            const points = currentCard.points;
+            
+            if (status === 'correct') {
+                score += points;
+            } else if (status === 'incorrect') {
+                score -= points;
+            }
+
+            // Mark the card as answered
+            const catIndex = GAME_DATA.findIndex(cat => cat.questions.includes(currentCard));
+            const qIndex = GAME_DATA[catIndex].questions.indexOf(currentCard);
+            const cardElement = document.getElementById(`card-${catIndex}-${qIndex}`);
+            cardElement.classList.add('answered');
+            cardElement.textContent = 'X'; // Mark as used
+
+            updateScoreDisplay();
+            closeModal();
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            document.getElementById('qa-modal').classList.add('hidden');
+            document.getElementById('qa-modal').classList.remove('flex');
+            currentCard = null; // Clear current question
+        }
+
+        // Initialize the board on window load
+        window.onload = initializeBoard;
+    </script>
+</body>
+</html>
