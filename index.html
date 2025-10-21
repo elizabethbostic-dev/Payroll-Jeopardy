@@ -3,62 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeSoto ISD Jeopardy Game</title>
-    <!-- Load Tailwind CSS for modern, responsive styling -->
+    <title>DeSoto ISD Financial Jeopardy Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for the Jeopardy Board */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1a40; /* Dark Blue */
+            background-color: #0b0c2a; /* Deeper Dark Blue for contrast */
             user-select: none;
             overflow-y: auto;
+            min-height: 100vh;
         }
 
         .category-header {
-            background-color: #0000a0; /* Darker Blue */
+            background-color: #000080; /* Royal Blue */
             color: #ffffff;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: bold;
             text-shadow: 2px 2px #000000;
-            min-height: 100px;
+            min-height: 120px; /* Slightly taller headers */
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger shadow */
+            letter-spacing: 0.05em;
         }
 
         .clue-button {
-            background-color: #0000ff; /* Bright Blue */
-            color: gold;
-            font-size: 2.5rem;
-            font-weight: bold;
-            text-shadow: 3px 3px #000000;
+            background-color: #0033ff; /* Vivid Blue */
+            color: #ffcc00; /* Richer Gold/Yellow */
+            font-size: 2.8rem;
+            font-weight: bolder;
+            text-shadow: 4px 4px #000000;
             height: 100%;
             width: 100%;
-            border: 4px solid #1a1a40;
-            border-radius: 8px;
+            border: 5px solid #0b0c2a; /* Deeper border color */
+            border-radius: 10px;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 6px 0 #001a80; /* 3D effect */
         }
 
         .clue-button:hover {
-            background-color: #1a1aff;
+            background-color: #1a4dff; /* Lighter Blue on hover */
+            box-shadow: 0 4px 0 #001a80;
         }
 
         .clue-button:active {
             transform: translateY(2px);
+            box-shadow: 0 2px 0 #001a80;
+        }
+        
+        .daily-double-button {
+            background-color: #ff9900; /* Orange/Gold for Daily Double */
+            color: #800000; /* Dark Red text for contrast */
+            font-size: 2.5rem;
+            font-weight: bolder;
+            text-shadow: 2px 2px #ffffff;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px #ffcc00, 0 6px 0 #cc6600; }
+            50% { box-shadow: 0 0 30px #ffcc00, 0 6px 0 #cc6600; }
+            100% { box-shadow: 0 0 10px #ffcc00, 0 6px 0 #cc6600; }
         }
 
         .clue-button.used {
-            background-color: #000040; /* Very Dark Blue */
+            background-color: #01013a; /* Very Dark Blue */
             color: #404040; /* Dark Grey */
             cursor: default;
             pointer-events: none;
             font-size: 1.5rem;
             text-shadow: none;
+            box-shadow: none;
+            transform: none;
         }
 
         /* Modal Styles */
@@ -68,131 +90,170 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
-            display: none; /* Controlled by JS */
+            background-color: rgba(0, 0, 0, 0.98); /* Almost opaque */
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px); /* Stronger blur */
         }
 
         .modal-content {
-            background-color: #1a1a40;
+            background-color: #0b0c2a;
             color: white;
-            border: 10px solid gold;
-            border-radius: 12px;
-            padding: 3rem;
-            max-width: 90vw;
-            max-height: 90vh;
+            border: 12px solid #ffcc00; /* Richer Gold border */
+            border-radius: 18px;
+            padding: 4rem;
+            max-width: 95vw;
+            max-height: 95vh;
             overflow-y: auto;
             text-align: center;
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 60px rgba(255, 204, 0, 0.8); /* Intense glow */
         }
 
         .modal-title {
-            font-size: 3rem;
-            color: gold;
+            font-size: 3.5rem;
+            color: #ffcc00;
             margin-bottom: 2rem;
-            text-shadow: 4px 4px #000000;
+            text-shadow: 5px 5px #000000;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
 
-        .modal-question, .modal-answer {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
+        .modal-question {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            border-left: 5px solid #00ffaa; /* Accent color */
+            color: #ffffff;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-answer {
-            color: limegreen;
-            font-weight: bold;
-            display: none; /* Controlled by JS */
+            color: #00ffaa; /* Bright green/cyan for answer */
+            font-weight: extra-bold;
+            display: none;
             margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: rgba(0, 255, 170, 0.1);
+            border-radius: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .daily-double-screen {
+            background-color: #800000; /* Deep Red */
+            color: #ffcc00;
+            font-size: 5rem;
+            font-weight: bold;
+            text-shadow: 5px 5px #000000;
+            padding: 3rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            animation: flash 0.5s infinite alternate;
+        }
+        
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.7; }
         }
 
-        .score-board {
-            background-color: #0000a0;
+        .score-board-team {
+            background-color: #001a80; /* Darker Blue */
             color: white;
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 10px;
+            border: 2px solid #ffcc00;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
-        .score-display {
-            font-size: 1.5rem;
+        .score-name {
+            font-size: 1.25rem;
             font-weight: bold;
+            color: #ffcc00;
+            text-shadow: 1px 1px #000000;
         }
-
-        /* Responsive Grid Adjustments */
-        @media (max-width: 768px) {
-            .category-header {
-                font-size: 1.1rem;
-                min-height: 80px;
-            }
-            .clue-button {
-                font-size: 1.8rem;
-            }
-            .modal-title {
-                font-size: 2rem;
-            }
-            .modal-question, .modal-answer {
-                font-size: 1.2rem;
-            }
+        .score-value {
+            font-size: 2rem;
+            font-weight: bolder;
+            color: #00ffaa;
+            text-shadow: 2px 2px #000000;
         }
-
     </style>
 </head>
 <body>
 
     <div class="p-4 md:p-8">
-        <!-- Header and Score Board -->
         <header class="text-center mb-6">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-4" style="text-shadow: 5px 5px #000000;">
-                <span class="text-yellow-400">DeSoto ISD</span> Jeopardy
+            <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4" style="text-shadow: 6px 6px #000000;">
+                <span class="text-yellow-400">DeSoto ISD</span> Financial Jeopardy
             </h1>
-            <div class="score-board flex flex-col justify-between space-y-3 p-4">
-                <div class="flex flex-col md:flex-row justify-between items-center w-full space-y-2 md:space-y-0 md:space-x-4">
-                    <p class="text-xl font-bold">Current Score Tracking</p>
-                    <div class="flex space-x-4">
-                        <button id="add-score" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow-md">Add $</button>
-                        <button id="subtract-score" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow-md">Subtract $</button>
-                        <button id="reset-score" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow-md">Reset</button>
+            <div class="score-board flex flex-col justify-between space-y-4 p-4">
+                <div class="flex flex-col md:flex-row justify-around items-center w-full space-y-4 md:space-y-0 md:space-x-8">
+                    <div class="score-board-team w-full md:w-1/2">
+                        <div class="score-name">Team A: The Eagles 🦅</div>
+                        <div class="score-value" id="score-A">$0</div>
+                        <div class="flex mt-2 space-x-2 justify-center">
+                            <button data-team="A" data-action="add" class="score-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md text-sm transition shadow-md">+</button>
+                            <button data-team="A" data-action="subtract" class="score-btn bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-md text-sm transition shadow-md">-</button>
+                        </div>
                     </div>
-                    <div class="score-display">Team Score: <span id="current-score" class="text-yellow-300">$0</span></div>
+                    <div class="score-board-team w-full md:w-1/2">
+                        <div class="score-name">Team B: The Ravens 🐦‍⬛</div>
+                        <div class="score-value" id="score-B">$0</div>
+                        <div class="flex mt-2 space-x-2 justify-center">
+                            <button data-team="B" data-action="add" class="score-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md text-sm transition shadow-md">+</button>
+                            <button data-team="B" data-action="subtract" class="score-btn bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-md text-sm transition shadow-md">-</button>
+                        </div>
+                    </div>
                 </div>
+                
+                <div class="flex justify-center mt-4">
+                    <button id="reset-score" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg text-lg transition shadow-md">Reset All Scores</button>
+                </div>
+                
                 <p class="text-sm text-gray-300 italic pt-2 border-t border-gray-700">
-                    *Score buttons only apply the value of the currently opened clue, making scoring quick and easy.
+                    *Score buttons automatically apply the value of the currently opened clue/Daily Double.
                 </p>
             </div>
         </header>
 
-        <!-- Jeopardy Board Grid -->
-        <div id="jeopardy-board" class="grid grid-cols-6 gap-3 md:gap-6">
-            <!-- Categories will be filled here -->
-        </div>
+        <div id="jeopardy-board" class="grid grid-cols-6 gap-4 md:gap-8">
+            </div>
     </div>
 
-    <!-- Clue Modal -->
     <div id="clue-modal" class="modal">
         <div class="modal-content">
             <p class="modal-title" id="modal-title">Category - $X</p>
-
-            <div class="text-2xl font-semibold mb-4 text-yellow-300">
-                <p>THE CLUE (Answer):</p>
+            
+            <div id="daily-double-info" style="display: none;">
+                <div class="daily-double-screen">DAILY DOUBLE!</div>
+                <p class="text-2xl font-semibold mb-4 text-yellow-300">Player must wager. Max wager is $2000 or their current score, whichever is greater.</p>
+                <button id="start-daily-double" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-200 text-xl mb-6">
+                    Ready for Clue
+                </button>
             </div>
-            <p id="modal-question" class="modal-question text-white text-3xl md:text-4xl font-light italic mb-8">
-                <!-- Question Text -->
-            </p>
 
-            <button id="show-answer-button" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-200 text-xl mb-6">
-                Reveal Correct Response
-            </button>
+            <div id="normal-clue-display">
+                <div class="text-2xl font-semibold mb-4 text-yellow-300">
+                    <p>THE CLUE (Answer):</p>
+                </div>
+                <p id="modal-question" class="modal-question text-white text-3xl md:text-4xl font-light italic mb-8">
+                    </p>
 
-            <div class="text-2xl font-semibold mb-2 text-green-300">
-                <p>THE CORRECT RESPONSE (Question):</p>
+                <button id="show-answer-button" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-200 text-xl mb-6">
+                    Reveal Correct Response
+                </button>
+
+                <div class="text-2xl font-semibold mb-2 text-green-300">
+                    <p>THE CORRECT RESPONSE (Question):</p>
+                </div>
+                <p id="modal-answer" class="modal-answer text-4xl md:text-5xl font-extrabold">
+                    </p>
             </div>
-            <p id="modal-answer" class="modal-answer text-4xl md:text-5xl font-extrabold">
-                <!-- Answer Text -->
-            </p>
 
             <button id="close-modal-button" class="mt-8 bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-lg shadow-xl transition duration-200 text-lg">
                 Close Clue (Mark as Used)
@@ -203,82 +264,86 @@
     <script>
         // --- GAME DATA ---
         // Clues are organized by Category (column) and then by Value (row).
-        // The values are organized by row index: 0=200, 1=400, 2=600, 3=800, 4=1000, 5=1200
+        // Removed 200 and 1200. Values are: 400, 600, 800, 1000
         const GAME_DATA = [
             {
                 category: "Payroll",
                 clues: [
-                    { value: 200, question: "This approval takes place prior to performing duties", answer: "What is overtime approval" },
+                    null, // Placeholder for removed 200 line
                     { value: 400, question: "Name the day of the week that timecards should be approved each week", answer: "What is Tuesday" },
                     { value: 600, question: "The Act that regulates minimum wage rates, overtime pay, child labor, and equal pay for employees", answer: "What is the Fair Labor Standards Act" },
-                    { value: 800, question: "In payroll, this is the amount paid to an employee before deductions and taxes.", answer: "What is gross pay" }, // Corrected clue
-                    { value: 1000, question: "The specific Texas code section that governs mandatory annual leave for eligible employees.", answer: "What is Texas Labor Code, Chapter 62" }, // Generic filler
-                    { value: 1200, question: "The form required to verify employment eligibility for all new hires.", answer: "What is the I-9 Form" } // Generic filler
+                    { value: 800, question: "In payroll, this is the amount paid to an employee before deductions and taxes.", answer: "What is gross pay" },
+                    { value: 1000, question: "The specific Texas code section that governs mandatory annual leave for eligible employees.", answer: "What is Texas Labor Code, Chapter 62", dailyDouble: true }, // DAILY DOUBLE
+                    null // Placeholder for removed 1200 line
                 ]
             },
             {
                 category: "Purchasing",
                 clues: [
-                    { value: 200, question: "The only authorized signer of all contracts and agreements", answer: "Who is the Superintendent" },
+                    null,
                     { value: 400, question: "This document creates a binding commitment with the vendor", answer: "What is a purchase order" },
                     { value: 600, question: "This request must be entered when the procurement process is not followed", answer: "What is a check request" },
-                    { value: 800, question: "The procurement method used for purchases between $50,000 and $100,000.", answer: "What is Competitive Sealed Proposals (CSP)" }, // Generic filler
-                    { value: 1000, question: "The required number of written quotes needed for purchases between $10,000 and $50,000.", answer: "What are three competitive quotes" }, // Generic filler
-                    { value: 1200, question: "The principle that requires district employees to use grant funds efficiently and effectively.", answer: "What is Cost Reasonableness" } // Generic filler
+                    { value: 800, question: "The procurement method used for purchases between $50,000 and $100,000.", answer: "What is Competitive Sealed Proposals (CSP)" },
+                    { value: 1000, question: "The required number of written quotes needed for purchases between $10,000 and $50,000.", answer: "What are three competitive quotes" },
+                    null
                 ]
             },
             {
                 category: "Accounts Payable",
                 clues: [
-                    { value: 200, question: "All invoices should be sent to this email address", answer: "What is financeinvoice@desotoisd.org" },
+                    null,
                     { value: 400, question: "Accounts Payable process that determines whether an invoice can be paid", answer: "What is a Three-way match (purchase order, receiver, invoice)" },
                     { value: 600, question: "This date must be after the purchase order creation date to be processed", answer: "What is the invoice date" },
-                    { value: 800, question: "The maximum number of days allowed for prompt payment of an invoice under the Texas Prompt Payment Act.", answer: "What is 30 days" }, // Generic filler
-                    { value: 1000, question: "The form used to certify a vendor's Taxpayer Identification Number (TIN).", answer: "What is the W-9 form" }, // Generic filler
-                    { value: 1200, question: "This document confirms that goods or services have been received by the district.", answer: "What is a receiver or receiving report" } // Generic filler
+                    { value: 800, question: "The maximum number of days allowed for prompt payment of an invoice under the Texas Prompt Payment Act.", answer: "What is 30 days" },
+                    { value: 1000, question: "The form used to certify a vendor's Taxpayer Identification Number (TIN).", answer: "What is the W-9 form" },
+                    null
                 ]
             },
             {
                 category: "Travel/Credit Card",
                 clues: [
-                    { value: 200, question: "The federal guide that establishes per diem rates to reimburse employees for lodging and meals", answer: "What is GSA (US General Services Administration)" },
+                    null,
                     { value: 400, question: "You have just returned from a TASBO conference in Austin, this report must be completed within 60 days to receive a reimbursement", answer: "What is an expense report" },
                     { value: 600, question: "An acceptable receipt must contain, vendor/merchant name, date of transaction, clear description of items purchased, and __________________", answer: "What is the payment method" },
-                    { value: 800, question: "The maximum number of business days allowed to reconcile a district P-Card statement.", answer: "What is 10 business days" }, // Generic filler
+                    { value: 800, question: "The maximum number of business days allowed to reconcile a district P-Card statement.", answer: "What is 10 business days", dailyDouble: true }, // DAILY DOUBLE
                     { value: 1000, question: "Meals and incidentals are reimbursed based on this method, rather than actual receipt amounts.", answer: "What is Per Diem" },
-                    { value: 1200, question: "The required documentation for all in-state travel claims.", answer: "What is the Travel Authorization form" } // Generic filler
+                    null
                 ]
             },
             {
                 category: "Budget",
                 clues: [
-                    { value: 200, question: "This indicator is used as a projection of funds allocated to the campuses and departments", answer: "What is the budget" },
+                    null,
                     { value: 400, question: "This code is used to separately identify revenues and expenses pertaining to each local, state, and federal program", answer: "What is a fund code" },
                     { value: 600, question: "Budget amounts cannot be transferred between fund codes, but with board approval, these codes may be transferred", answer: "What is a function code" },
-                    { value: 800, question: "The calculation method TEA uses for school district funding", answer: "What is average daily attendance (ADA)" }, // From Finance doc
-                    { value: 1000, question: "This code identifies the type of expenditure, such as supplies, salaries, or professional services.", answer: "What is an object code" }, // Generic filler
-                    { value: 1200, question: "The district's local fund source, typically used for the general operation of the district.", answer: "What is Fund 199 (General Operating Fund)" } // Generic filler
+                    { value: 800, question: "The calculation method TEA uses for school district funding", answer: "What is average daily attendance (ADA)" },
+                    { value: 1000, question: "This code identifies the type of expenditure, such as supplies, salaries, or professional services.", answer: "What is an object code" },
+                    null
                 ]
             },
             {
                 category: "Accounting/Grants",
                 clues: [
-                    { value: 200, question: "Revenue for DeSoto ISD comes from these three sources", answer: "What is federal, state, local" },
+                    null,
                     { value: 400, question: "An official financial examination of an organization’s accounts", answer: "What is an audit" },
                     { value: 600, question: "This document is required to support payroll costs for personnel whose salaries are paid in whole or part with federal funds", answer: "What is time and effort (semi-annual certification)" },
-                    { value: 800, question: "This type of asset has a unit cost of $5,000 or more", answer: "What is a capital asset" }, // From Finance doc
-                    { value: 1000, question: "A strategic document that outlines a school’s goals for the academic year", answer: "What is a campus improvement plan (CIP)" }, // From Finance doc
-                    { value: 1200, question: "A legal document that indicates a grant has been awarded and funds may be requested", answer: "What is the notice of grant award (NOGA)" } // From Finance doc
+                    { value: 800, question: "This type of asset has a unit cost of $5,000 or more", answer: "What is a capital asset" },
+                    { value: 1000, question: "A strategic document that outlines a school’s goals for the academic year", answer: "What is a campus improvement plan (CIP)" },
+                    null
                 ]
             }
         ];
 
         // Ensure all categories have the same number of clues for a clean grid layout
-        const CLUE_COUNT = Math.max(...GAME_DATA.map(c => c.clues.length));
+        const CLUE_COUNT = GAME_DATA[0].clues.length; // Will be 6 (including nulls for 200/1200)
+        const SCORE_VALUES = [200, 400, 600, 800, 1000, 1200]; // Base values for index matching
 
         // --- GLOBAL STATE ---
-        let currentScore = 0;
+        let scores = { A: 0, B: 0 };
         let activeClueButton = null;
+        let activeClueValue = 0;
+        let isDailyDouble = false;
+        let dailyDoubleWager = 0; // For tracking the actual wager
 
         // --- DOM ELEMENTS ---
         const board = document.getElementById('jeopardy-board');
@@ -288,16 +353,27 @@
         const modalAnswer = document.getElementById('modal-answer');
         const showAnswerBtn = document.getElementById('show-answer-button');
         const closeModalBtn = document.getElementById('close-modal-button');
-        const scoreDisplay = document.getElementById('current-score');
-        const addScoreBtn = document.getElementById('add-score');
-        const subtractScoreBtn = document.getElementById('subtract-score');
+        const scoreDisplays = {
+            A: document.getElementById('score-A'),
+            B: document.getElementById('score-B')
+        };
+        const scoreBtns = document.querySelectorAll('.score-btn');
         const resetScoreBtn = document.getElementById('reset-score');
+        const dailyDoubleInfo = document.getElementById('daily-double-info');
+        const normalClueDisplay = document.getElementById('normal-clue-display');
+        const startDailyDoubleBtn = document.getElementById('start-daily-double');
 
         // --- FUNCTIONS ---
 
-        function updateScore(delta) {
-            currentScore += delta;
-            scoreDisplay.textContent = `$${currentScore}`;
+        function updateScoreDisplay() {
+            scoreDisplays.A.textContent = `$${scores.A}`;
+            scoreDisplays.B.textContent = `$${scores.B}`;
+        }
+        
+        // This function handles both regular and Daily Double scoring
+        function updateScore(team, delta) {
+            scores[team] += delta;
+            updateScoreDisplay();
         }
 
         function createBoard() {
@@ -313,30 +389,45 @@
             });
 
             // 2. Create Clue Buttons
-            const baseValues = [200, 400, 600, 800, 1000, 1200]; 
-
             for (let i = 0; i < CLUE_COUNT; i++) {
+                // Skip rows 0 (200) and 5 (1200) for visual display
+                if (i === 0 || i === 5) {
+                    GAME_DATA.forEach(() => {
+                        const spacer = document.createElement('div');
+                        spacer.className = 'bg-transparent h-full';
+                        board.appendChild(spacer);
+                    });
+                    continue; // Skip the rest of the loop for this row
+                }
+                
                 GAME_DATA.forEach((categoryData, catIndex) => {
                     const clue = categoryData.clues[i];
-
+                    
                     const buttonWrapper = document.createElement('div');
                     buttonWrapper.className = 'aspect-square h-full';
 
                     if (clue) {
                         const button = document.createElement('button');
-                        const value = clue.value || baseValues[i];
+                        const value = clue.value || SCORE_VALUES[i];
 
                         button.textContent = `$${value}`;
                         button.className = 'clue-button shadow-2xl';
+                        
+                        if (clue.dailyDouble) {
+                            button.classList.add('daily-double-button');
+                            button.textContent = "DD"; // Text for daily double button
+                        }
+
                         button.dataset.categoryIndex = catIndex;
                         button.dataset.clueIndex = i;
                         button.dataset.value = value;
+                        button.dataset.isDailyDouble = clue.dailyDouble || false;
 
                         button.addEventListener('click', () => openClue(button, clue));
 
                         buttonWrapper.appendChild(button);
                     } else {
-                        // Placeholder for categories with fewer than max clues (shouldn't happen with 6 clues per category)
+                        // Placeholder for non-existent clues (like the skipped rows if we didn't use the 'continue' above)
                         buttonWrapper.className = 'bg-transparent h-full';
                     }
                     board.appendChild(buttonWrapper);
@@ -346,26 +437,68 @@
 
         function openClue(button, clue) {
             activeClueButton = button;
+            activeClueValue = clue.value;
+            isDailyDouble = clue.dailyDouble || false;
 
             // Reset modal for new clue
             modalAnswer.style.display = 'none';
             showAnswerBtn.style.display = 'block';
             modal.style.display = 'flex';
-
+            
             // Populate modal
             modalTitle.textContent = `${GAME_DATA[button.dataset.categoryIndex].category} - $${clue.value}`;
-            modalQuestion.textContent = clue.question;
-            modalAnswer.textContent = clue.answer;
+
+            if (isDailyDouble) {
+                // Show Daily Double screen
+                dailyDoubleInfo.style.display = 'block';
+                normalClueDisplay.style.display = 'none';
+                
+                // Set clue text but keep it hidden until the wager is "made"
+                modalQuestion.textContent = clue.question;
+                modalAnswer.textContent = clue.answer;
+                
+            } else {
+                // Show Normal Clue screen
+                dailyDoubleInfo.style.display = 'none';
+                normalClueDisplay.style.display = 'block';
+                
+                modalQuestion.textContent = clue.question;
+                modalAnswer.textContent = clue.answer;
+            }
+        }
+        
+        function startDailyDouble() {
+            // Transition from the DD Wager screen to the Clue screen
+            dailyDoubleInfo.style.display = 'none';
+            normalClueDisplay.style.display = 'block';
+            
+            // Logic to calculate the actual wager could go here, but for simplicity
+            // we'll leave it to the moderator to manage the *wager value* and input it 
+            // via the score buttons after the answer is revealed.
+            // We set the score tracking value to the max possible wager for easy entry.
+            // Max wager: $2000 or their current score, whichever is greater (for Double Jeopardy values, it's $4000)
+            // For now, let's keep the score tracking simple and based on the category value, 
+            // and the moderator enters the *wager* after the fact.
+            activeClueValue = parseInt(activeClueButton.dataset.value, 10);
         }
 
         function showAnswer() {
             modalAnswer.style.display = 'block';
             showAnswerBtn.style.display = 'none';
-
-            // Allow the user to manually track the score now that the answer is visible
-            const value = parseInt(activeClueButton.dataset.value, 10);
-            document.getElementById('add-score').dataset.clueValue = value;
-            document.getElementById('subtract-score').dataset.clueValue = value;
+            
+            // Set the value that the score buttons will use
+            // If DD, the moderator must manually enter the wager value using the buttons. 
+            // For regular clues, it's the clue value.
+            if (isDailyDouble) {
+                // Daily Double: The buttons will use the *clue value* by default. 
+                // Moderator must remember or write down the actual *wager* to add/subtract.
+                // We will display a reminder in the console/alert for a moderator.
+                alert("DAILY DOUBLE: Remember the actual wager! Use the score buttons to add/subtract the WAGER, not the clue value ($" + activeClueValue + ").");
+                // Reset activeClueValue to 0 so the buttons don't accidentally apply $1000/$800
+                activeClueValue = 0; 
+            } else {
+                activeClueValue = parseInt(activeClueButton.dataset.value, 10);
+            }
         }
 
         function closeModal() {
@@ -373,34 +506,43 @@
                 // Mark the clue as used
                 activeClueButton.textContent = 'Used';
                 activeClueButton.classList.add('used');
+                activeClueButton.classList.remove('daily-double-button');
                 activeClueButton = null;
             }
             modal.style.display = 'none';
-
-            // Clear temporary score tracking value
-            document.getElementById('add-score').dataset.clueValue = 0;
-            document.getElementById('subtract-score').dataset.clueValue = 0;
+            
+            // Reset active state
+            activeClueValue = 0; 
+            isDailyDouble = false;
         }
 
         // --- EVENT LISTENERS ---
 
         showAnswerBtn.addEventListener('click', showAnswer);
         closeModalBtn.addEventListener('click', closeModal);
+        startDailyDoubleBtn.addEventListener('click', startDailyDouble);
 
-        // Score Button Logic
-        addScoreBtn.addEventListener('click', () => {
-            const value = parseInt(addScoreBtn.dataset.clueValue || 0, 10);
-            updateScore(value);
-        });
-
-        subtractScoreBtn.addEventListener('click', () => {
-            const value = parseInt(subtractScoreBtn.dataset.clueValue || 0, 10);
-            updateScore(-value);
+        // Score Button Logic - now handles two teams
+        scoreBtns.forEach(button => {
+            button.addEventListener('click', () => {
+                const team = button.dataset.team;
+                const action = button.dataset.action;
+                
+                // For non-DD, use the activeClueValue (the category value).
+                // For DD, the moderator must use the buttons to manually apply the wager.
+                let valueToApply = activeClueValue; 
+                
+                if (action === 'add') {
+                    updateScore(team, valueToApply);
+                } else if (action === 'subtract') {
+                    updateScore(team, -valueToApply);
+                }
+            });
         });
 
         resetScoreBtn.addEventListener('click', () => {
-            currentScore = 0;
-            updateScore(0); // Call update to refresh display
+            scores = { A: 0, B: 0 };
+            updateScoreDisplay();
         });
 
         // Initialize Board on load
