@@ -1,16 +1,15 @@
 <script>
-    // --- GAME DATA ---
-    // (Keep the GAME_DATA array exactly as it was)
+    // --- GAME DATA (Keeping the data the same) ---
     const GAME_DATA = [
         {
             category: "Payroll",
             clues: [
-                null, // Placeholder for removed 200 line
+                null,
                 { value: 400, question: "Name the day of the week that timecards should be approved each week", answer: "What is Tuesday" },
                 { value: 600, question: "The Act that regulates minimum wage rates, overtime pay, child labor, and equal pay for employees", answer: "What is the Fair Labor Standards Act" },
                 { value: 800, question: "In payroll, this is the amount paid to an employee before deductions and taxes.", answer: "What is gross pay" },
                 { value: 1000, question: "The specific Texas code section that governs mandatory annual leave for eligible employees.", answer: "What is Texas Labor Code, Chapter 62", dailyDouble: true }, // DAILY DOUBLE
-                null // Placeholder for removed 1200 line
+                null
             ]
         },
         {
@@ -76,9 +75,9 @@
     // --- GLOBAL STATE ---
     let scores = { A: 0, B: 0 };
     let activeClueButton = null;
-    let activeClueValue = 0;
+    let activeClueValue = 0; // Value for regular clues
+    let dailyDoubleWager = 0; // The actual wager for DD
     let isDailyDouble = false;
-    let dailyDoubleWager = 0; 
 
     // --- DOM ELEMENTS ---
     const board = document.getElementById('jeopardy-board');
@@ -97,6 +96,8 @@
     const dailyDoubleInfo = document.getElementById('daily-double-info');
     const normalClueDisplay = document.getElementById('normal-clue-display');
     const startDailyDoubleBtn = document.getElementById('start-daily-double');
+    // NEW DOM ELEMENT
+    const wagerInput = document.getElementById('wager-input'); 
 
     // --- FUNCTIONS ---
 
@@ -105,14 +106,12 @@
         scoreDisplays.B.textContent = `$${scores.B}`;
     }
     
-    // This function handles both regular and Daily Double scoring
     function updateScore(team, delta) {
         scores[team] += delta;
         updateScoreDisplay();
     }
 
     function createBoard() {
-        // Set grid columns dynamically based on category count
         board.style.gridTemplateColumns = `repeat(${GAME_DATA.length}, minmax(0, 1fr))`;
 
         // 1. Create Category Headers
@@ -125,14 +124,13 @@
 
         // 2. Create Clue Buttons
         for (let i = 0; i < CLUE_COUNT; i++) {
-            // Skip rows 0 (200) and 5 (1200) for visual display
-            if (i === 0 || i === 5) {
+            if (i === 0 || i === 5) { // Skip 200 and 1200 rows
                 GAME_DATA.forEach(() => {
                     const spacer = document.createElement('div');
                     spacer.className = 'bg-transparent h-full';
                     board.appendChild(spacer);
                 });
-                continue; // Skip the rest of the loop for this row
+                continue;
             }
             
             GAME_DATA.forEach((categoryData, catIndex) => {
@@ -150,7 +148,7 @@
                     
                     if (clue.dailyDouble) {
                         button.classList.add('daily-double-button');
-                        button.textContent = "DD"; // Text for daily double button
+                        button.textContent = "DD";
                     }
 
                     button.dataset.categoryIndex = catIndex;
@@ -162,7 +160,6 @@
 
                     buttonWrapper.appendChild(button);
                 } else {
-                    // Placeholder for non-existent clues
                     buttonWrapper.className = 'bg-transparent h-full';
                 }
                 board.appendChild(buttonWrapper);
@@ -172,7 +169,7 @@
 
     function openClue(button, clue) {
         activeClueButton = button;
-        activeClueValue = clue.value; // Store the category value
+        activeClueValue = clue.value;
         isDailyDouble = clue.dailyDouble || false;
 
         // Reset modal for new clue
@@ -188,41 +185,43 @@
             dailyDoubleInfo.style.display = 'block';
             normalClueDisplay.style.display = 'none';
             
-            modalQuestion.textContent = clue.question;
-            modalAnswer.textContent = clue.answer;
+            // Reset wager for a new DD
+            wagerInput.value = activeClueValue; // Default the wager to the clue value
+            wagerInput.focus();
             
         } else {
             // Show Normal Clue screen
             dailyDoubleInfo.style.display = 'none';
             normalClueDisplay.style.display = 'block';
-            
-            modalQuestion.textContent = clue.question;
-            modalAnswer.textContent = clue.answer;
         }
+        
+        // Clue content is set regardless of DD state
+        modalQuestion.textContent = clue.question;
+        modalAnswer.textContent = clue.answer;
     }
     
     function startDailyDouble() {
+        // Capture the wager before showing the clue
+        dailyDoubleWager = parseInt(wagerInput.value) || 0;
+        if (dailyDoubleWager < 5 && dailyDoubleWager !== 0) {
+            alert("Wager must be at least $5. Setting wager to $5.");
+            dailyDoubleWager = 5;
+        }
+
         // Transition from the DD Wager screen to the Clue screen
         dailyDoubleInfo.style.display = 'none';
         normalClueDisplay.style.display = 'block';
         
-        // Reset activeClueValue to 0 for DD. Moderator *must* use buttons to apply wager.
+        // Update modal title to reflect the wager if you want, but sticking to clue value for simplicity
+        modalTitle.textContent = `${GAME_DATA[activeClueButton.dataset.categoryIndex].category} - Wager: $${dailyDoubleWager}`;
+        
+        // Set activeClueValue to 0 to signal score buttons to use the stored wager
         activeClueValue = 0; 
     }
 
     function showAnswer() {
         modalAnswer.style.display = 'block';
         showAnswerBtn.style.display = 'none';
-        
-        // If not a Daily Double, set the value to be applied by the score buttons
-        if (!isDailyDouble) {
-            activeClueValue = parseInt(activeClueButton.dataset.value, 10);
-        } else {
-            // Daily Double: The buttons will apply the value '0' by default. 
-            // Moderator must visually confirm the correct team and *manually* click the add/subtract buttons
-            // multiple times to match the wager amount. (e.g., for a $500 wager, click the button five times if the base value is 100)
-            alert("DAILY DOUBLE: Use the Add/Subtract buttons to manually apply the **wager amount** to the selected team. Click multiple times if necessary.");
-        }
     }
 
     function closeModal() {
@@ -237,7 +236,11 @@
         
         // Reset active state
         activeClueValue = 0; 
+        dailyDoubleWager = 0;
         isDailyDouble = false;
+        
+        // Restore title to original format on close
+        modalTitle.textContent = "Category - $X"; 
     }
 
     // --- EVENT LISTENERS ---
@@ -246,21 +249,33 @@
     closeModalBtn.addEventListener('click', closeModal);
     startDailyDoubleBtn.addEventListener('click', startDailyDouble);
 
-    // Score Button Logic - now handles two teams and uses activeClueValue for non-DD
+    // Score Button Logic - FIXES THE DD SCORING PROBLEM
     scoreBtns.forEach(button => {
         button.addEventListener('click', () => {
             const team = button.dataset.team;
             const action = button.dataset.action;
+            let valueToApply;
             
-            // Determine the value to apply. 
-            // If it's a regular clue (activeClueValue > 0), use that value.
-            // If it's a DD (activeClueValue === 0), use a base value of $100 for manual click counting (e.g., 5 clicks = $500).
-            let valueToApply = activeClueValue > 0 ? activeClueValue : 100;
+            if (isDailyDouble) {
+                // If it's a Daily Double, use the stored wager amount
+                valueToApply = dailyDoubleWager;
+                if (valueToApply === 0) {
+                     alert("ERROR: Please set the wager on the Daily Double screen first.");
+                     return;
+                }
+            } else {
+                // If it's a regular clue, use the category value
+                valueToApply = activeClueValue;
+            }
             
-            if (action === 'add') {
-                updateScore(team, valueToApply);
-            } else if (action === 'subtract') {
-                updateScore(team, -valueToApply);
+            if (valueToApply > 0) {
+                if (action === 'add') {
+                    updateScore(team, valueToApply);
+                } else if (action === 'subtract') {
+                    updateScore(team, -valueToApply);
+                }
+            } else {
+                alert("Please select a clue before attempting to score.");
             }
         });
     });
