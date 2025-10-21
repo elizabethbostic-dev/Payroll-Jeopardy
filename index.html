@@ -1,291 +1,31 @@
-<script>
-    // --- GAME DATA (Keeping the data the same) ---
-    const GAME_DATA = [
-        {
-            category: "Payroll",
-            clues: [
-                null,
-                { value: 400, question: "Name the day of the week that timecards should be approved each week", answer: "What is Tuesday" },
-                { value: 600, question: "The Act that regulates minimum wage rates, overtime pay, child labor, and equal pay for employees", answer: "What is the Fair Labor Standards Act" },
-                { value: 800, question: "In payroll, this is the amount paid to an employee before deductions and taxes.", answer: "What is gross pay" },
-                { value: 1000, question: "The specific Texas code section that governs mandatory annual leave for eligible employees.", answer: "What is Texas Labor Code, Chapter 62", dailyDouble: true }, // DAILY DOUBLE
-                null
-            ]
-        },
-        {
-            category: "Purchasing",
-            clues: [
-                null,
-                { value: 400, question: "This document creates a binding commitment with the vendor", answer: "What is a purchase order" },
-                { value: 600, question: "This request must be entered when the procurement process is not followed", answer: "What is a check request" },
-                { value: 800, question: "The procurement method used for purchases between $50,000 and $100,000.", answer: "What is Competitive Sealed Proposals (CSP)" },
-                { value: 1000, question: "The required number of written quotes needed for purchases between $10,000 and $50,000.", answer: "What are three competitive quotes" },
-                null
-            ]
-        },
-        {
-            category: "Accounts Payable",
-            clues: [
-                null,
-                { value: 400, question: "Accounts Payable process that determines whether an invoice can be paid", answer: "What is a Three-way match (purchase order, receiver, invoice)" },
-                { value: 600, question: "This date must be after the purchase order creation date to be processed", answer: "What is the invoice date" },
-                { value: 800, question: "The maximum number of days allowed for prompt payment of an invoice under the Texas Prompt Payment Act.", answer: "What is 30 days" },
-                { value: 1000, question: "The form used to certify a vendor's Taxpayer Identification Number (TIN).", answer: "What is the W-9 form" },
-                null
-            ]
-        },
-        {
-            category: "Travel/Credit Card",
-            clues: [
-                null,
-                { value: 400, question: "You have just returned from a TASBO conference in Austin, this report must be completed within 60 days to receive a reimbursement", answer: "What is an expense report" },
-                { value: 600, question: "An acceptable receipt must contain, vendor/merchant name, date of transaction, clear description of items purchased, and __________________", answer: "What is the payment method" },
-                { value: 800, question: "The maximum number of business days allowed to reconcile a district P-Card statement.", answer: "What is 10 business days", dailyDouble: true }, // DAILY DOUBLE
-                { value: 1000, question: "Meals and incidentals are reimbursed based on this method, rather than actual receipt amounts.", answer: "What is Per Diem" },
-                null
-            ]
-        },
-        {
-            category: "Budget",
-            clues: [
-                null,
-                { value: 400, question: "This code is used to separately identify revenues and expenses pertaining to each local, state, and federal program", answer: "What is a fund code" },
-                { value: 600, question: "Budget amounts cannot be transferred between fund codes, but with board approval, these codes may be transferred", answer: "What is a function code" },
-                { value: 800, question: "The calculation method TEA uses for school district funding", answer: "What is average daily attendance (ADA)" },
-                { value: 1000, question: "This code identifies the type of expenditure, such as supplies, salaries, or professional services.", answer: "What is an object code" },
-                null
-            ]
-        },
-        {
-            category: "Accounting/Grants",
-            clues: [
-                null,
-                { value: 400, question: "An official financial examination of an organization’s accounts", answer: "What is an audit" },
-                { value: 600, question: "This document is required to support payroll costs for personnel whose salaries are paid in whole or part with federal funds", answer: "What is time and effort (semi-annual certification)" },
-                { value: 800, question: "This type of asset has a unit cost of $5,000 or more", answer: "What is a capital asset" },
-                { value: 1000, question: "A strategic document that outlines a school’s goals for the academic year.", answer: "What is a campus improvement plan (CIP)" },
-                null
-            ]
-        }
-    ];
-
-    const CLUE_COUNT = GAME_DATA[0].clues.length;
-    const SCORE_VALUES = [200, 400, 600, 800, 1000, 1200]; 
-
-    // --- GLOBAL STATE ---
-    let scores = { A: 0, B: 0 };
-    let activeClueButton = null;
-    let activeClueValue = 0; // Value for regular clues
-    let dailyDoubleWager = 0; // The actual wager for DD
-    let isDailyDouble = false;
-
-    // --- DOM ELEMENTS ---
-    const board = document.getElementById('jeopardy-board');
-    const modal = document.getElementById('clue-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalQuestion = document.getElementById('modal-question');
-    const modalAnswer = document.getElementById('modal-answer');
-    const showAnswerBtn = document.getElementById('show-answer-button');
-    const closeModalBtn = document.getElementById('close-modal-button');
-    const scoreDisplays = {
-        A: document.getElementById('score-A'),
-        B: document.getElementById('score-B')
-    };
-    const scoreBtns = document.querySelectorAll('.score-btn');
-    const resetScoreBtn = document.getElementById('reset-score');
-    const dailyDoubleInfo = document.getElementById('daily-double-info');
-    const normalClueDisplay = document.getElementById('normal-clue-display');
-    const startDailyDoubleBtn = document.getElementById('start-daily-double');
-    // NEW DOM ELEMENT
-    const wagerInput = document.getElementById('wager-input'); 
-
-    // --- FUNCTIONS ---
-
-    function updateScoreDisplay() {
-        scoreDisplays.A.textContent = `$${scores.A}`;
-        scoreDisplays.B.textContent = `$${scores.B}`;
-    }
+<div id="action-buttons" class="mt-8 flex justify-center space-x-4">
+    <button onclick="showAnswer()" id="reveal-btn" class="reveal-button px-8 py-3 text-2xl rounded-full font-bold">
+        Reveal Answer
+    </button>
     
-    function updateScore(team, delta) {
-        scores[team] += delta;
-        updateScoreDisplay();
-    }
+    <div id="scoring-btns" class="hidden space-x-4">
+        <div class="flex flex-col space-y-2">
+            <p class="text-sm font-bold text-white">The Compilers</p>
+            <button onclick="updateScore('team1', 'correct')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-lg rounded-full font-bold transition duration-150">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button onclick="updateScore('team1', 'incorrect')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-lg rounded-full font-bold transition duration-150">
+                <i class="fas fa-minus"></i>
+            </button>
+        </div>
 
-    function createBoard() {
-        board.style.gridTemplateColumns = `repeat(${GAME_DATA.length}, minmax(0, 1fr))`;
+        <div class="flex flex-col space-y-2">
+            <p class="text-sm font-bold text-white">The Auditors</p>
+            <button onclick="updateScore('team2', 'correct')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-lg rounded-full font-bold transition duration-150">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button onclick="updateScore('team2', 'incorrect')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-lg rounded-full font-bold transition duration-150">
+                <i class="fas fa-minus"></i>
+            </button>
+        </div>
 
-        // 1. Create Category Headers
-        GAME_DATA.forEach(categoryData => {
-            const header = document.createElement('div');
-            header.className = 'category-header rounded-lg shadow-xl uppercase';
-            header.textContent = categoryData.category;
-            board.appendChild(header);
-        });
-
-        // 2. Create Clue Buttons
-        for (let i = 0; i < CLUE_COUNT; i++) {
-            if (i === 0 || i === 5) { // Skip 200 and 1200 rows
-                GAME_DATA.forEach(() => {
-                    const spacer = document.createElement('div');
-                    spacer.className = 'bg-transparent h-full';
-                    board.appendChild(spacer);
-                });
-                continue;
-            }
-            
-            GAME_DATA.forEach((categoryData, catIndex) => {
-                const clue = categoryData.clues[i];
-                
-                const buttonWrapper = document.createElement('div');
-                buttonWrapper.className = 'aspect-square h-full';
-
-                if (clue) {
-                    const button = document.createElement('button');
-                    const value = clue.value || SCORE_VALUES[i];
-
-                    button.textContent = `$${value}`;
-                    button.className = 'clue-button shadow-2xl';
-                    
-                    if (clue.dailyDouble) {
-                        button.classList.add('daily-double-button');
-                        button.textContent = "DD";
-                    }
-
-                    button.dataset.categoryIndex = catIndex;
-                    button.dataset.clueIndex = i;
-                    button.dataset.value = value;
-                    button.dataset.isDailyDouble = clue.dailyDouble || false;
-
-                    button.addEventListener('click', () => openClue(button, clue));
-
-                    buttonWrapper.appendChild(button);
-                } else {
-                    buttonWrapper.className = 'bg-transparent h-full';
-                }
-                board.appendChild(buttonWrapper);
-            });
-        }
-    }
-
-    function openClue(button, clue) {
-        activeClueButton = button;
-        activeClueValue = clue.value;
-        isDailyDouble = clue.dailyDouble || false;
-
-        // Reset modal for new clue
-        modalAnswer.style.display = 'none';
-        showAnswerBtn.style.display = 'block';
-        modal.style.display = 'flex';
-        
-        // Populate modal
-        modalTitle.textContent = `${GAME_DATA[button.dataset.categoryIndex].category} - $${clue.value}`;
-
-        if (isDailyDouble) {
-            // Show Daily Double screen
-            dailyDoubleInfo.style.display = 'block';
-            normalClueDisplay.style.display = 'none';
-            
-            // Reset wager for a new DD
-            wagerInput.value = activeClueValue; // Default the wager to the clue value
-            wagerInput.focus();
-            
-        } else {
-            // Show Normal Clue screen
-            dailyDoubleInfo.style.display = 'none';
-            normalClueDisplay.style.display = 'block';
-        }
-        
-        // Clue content is set regardless of DD state
-        modalQuestion.textContent = clue.question;
-        modalAnswer.textContent = clue.answer;
-    }
-    
-    function startDailyDouble() {
-        // Capture the wager before showing the clue
-        dailyDoubleWager = parseInt(wagerInput.value) || 0;
-        if (dailyDoubleWager < 5 && dailyDoubleWager !== 0) {
-            alert("Wager must be at least $5. Setting wager to $5.");
-            dailyDoubleWager = 5;
-        }
-
-        // Transition from the DD Wager screen to the Clue screen
-        dailyDoubleInfo.style.display = 'none';
-        normalClueDisplay.style.display = 'block';
-        
-        // Update modal title to reflect the wager if you want, but sticking to clue value for simplicity
-        modalTitle.textContent = `${GAME_DATA[activeClueButton.dataset.categoryIndex].category} - Wager: $${dailyDoubleWager}`;
-        
-        // Set activeClueValue to 0 to signal score buttons to use the stored wager
-        activeClueValue = 0; 
-    }
-
-    function showAnswer() {
-        modalAnswer.style.display = 'block';
-        showAnswerBtn.style.display = 'none';
-    }
-
-    function closeModal() {
-        if (activeClueButton) {
-            // Mark the clue as used
-            activeClueButton.textContent = 'Used';
-            activeClueButton.classList.add('used');
-            activeClueButton.classList.remove('daily-double-button');
-            activeClueButton = null;
-        }
-        modal.style.display = 'none';
-        
-        // Reset active state
-        activeClueValue = 0; 
-        dailyDoubleWager = 0;
-        isDailyDouble = false;
-        
-        // Restore title to original format on close
-        modalTitle.textContent = "Category - $X"; 
-    }
-
-    // --- EVENT LISTENERS ---
-
-    showAnswerBtn.addEventListener('click', showAnswer);
-    closeModalBtn.addEventListener('click', closeModal);
-    startDailyDoubleBtn.addEventListener('click', startDailyDouble);
-
-    // Score Button Logic - FIXES THE DD SCORING PROBLEM
-    scoreBtns.forEach(button => {
-        button.addEventListener('click', () => {
-            const team = button.dataset.team;
-            const action = button.dataset.action;
-            let valueToApply;
-            
-            if (isDailyDouble) {
-                // If it's a Daily Double, use the stored wager amount
-                valueToApply = dailyDoubleWager;
-                if (valueToApply === 0) {
-                     alert("ERROR: Please set the wager on the Daily Double screen first.");
-                     return;
-                }
-            } else {
-                // If it's a regular clue, use the category value
-                valueToApply = activeClueValue;
-            }
-            
-            if (valueToApply > 0) {
-                if (action === 'add') {
-                    updateScore(team, valueToApply);
-                } else if (action === 'subtract') {
-                    updateScore(team, -valueToApply);
-                }
-            } else {
-                alert("Please select a clue before attempting to score.");
-            }
-        });
-    });
-
-    resetScoreBtn.addEventListener('click', () => {
-        scores = { A: 0, B: 0 };
-        updateScoreDisplay();
-    });
-
-    // Initialize Board on load
-    window.onload = createBoard;
-
-</script>
+        <button onclick="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 text-xl rounded-full font-bold transition duration-150 self-end">
+            Close
+        </button>
+    </div>
+    </div>
